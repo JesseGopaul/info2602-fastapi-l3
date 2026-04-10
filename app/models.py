@@ -10,9 +10,8 @@ class User(SQLModel, table=True):
     email:str = Field(index=True, unique=True)
     password:str
 
-    ## Task 3.1 code should go here (special care should go into the indentation)
-
-    ## End of task 3.1 code
+    ## Task 3.1: Relationship to link User to Many Todos
+    todos: list['Todo'] = Relationship(back_populates="user")
 
     def set_password(self, plaintext_password):
         self.password = password_hash.hash(plaintext_password)
@@ -20,22 +19,35 @@ class User(SQLModel, table=True):
     def __str__(self) -> str:
         return f"(User id={self.id}, username={self.username} ,email={self.email})"
 
+
 class TodoCategory(SQLModel, table=True):
-    # Implementation of the TodoCategory model from task 5.1 here
-    pass
+    # Task 5.1: The Many-to-Many bridge table
+    todo_id: int | None = Field(default=None, primary_key=True, foreign_key='todo.id')
+    category_id: int | None = Field(default=None, primary_key=True, foreign_key='category.id')
 
 
 class Todo(SQLModel, table=True):
-    ## Task 2.1 implementation here. Remove the line below that says "pass" once completed
-    pass
+    ## Task 2.1: Todo properties
+    id: Optional[int] =  Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key='user.id') 
+    text: str = Field(max_length=255)
+    done: bool = Field(default=False)
 
-    ## Task 3.2 implementation should go here as well. Modify the class like you did for 3.1 above
+    ## Task 3.2: Relationship mapping back to the single User
+    user: User = Relationship(back_populates="todos")
 
-    ## Task 3.4 implementation should go here as well
+    ## Task 5.2: Relationship mapping to Many Categories
+    categories: list['Category'] = Relationship(back_populates="todos", link_model=TodoCategory)
 
-    # Task 5.2 code should go here
+    ## Task 3.4: Toggle method
+    def toggle(self):
+        self.done = not self.done
     
     
 class Category(SQLModel, table=True):
-    # Implementation of the Category model from task 5.1 here
-    pass
+    # Task 5.1: Category model mapping back to Many Todos
+    id: Optional[int] =  Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key='user.id') 
+    text: str = Field(max_length=255)
+
+    todos: list['Todo'] = Relationship(back_populates="categories", link_model=TodoCategory)
